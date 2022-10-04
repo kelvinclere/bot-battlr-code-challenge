@@ -9,19 +9,57 @@ const botTypeClasses = {
   Captain: "icon star",
 };
 
-function BotCard({ bot, handleClick, deleteBot }) {
+function BotCard({ bot, setBotArmy, setBots, position }) {
+  function handleBotClick(e) {
+    console.log(bot.id);
 
-  function handleDischarge(e){
-    e.stopPropagation()
-    deleteBot(bot)
+    e.preventDefault();
+
+    setBotArmy((botFleet) => {
+      botFleet = [...botFleet];
+
+      if (botFleet.includes(bot)) {
+        if (position === "botPagePosition") {
+          botFleet.splice(botFleet.indexOf(bot), 1);
+        }
+      } else {
+        botFleet.push(bot);
+      }
+
+      console.log(
+        "Army:" + typeof botFleet + " Size: " + botFleet.length
+      );
+      return botFleet;
+    });
   }
+
+  function releaseBot(e) {
+    e.preventDefault();
+
+    fetch(`http://localhost:8002/bots/${bot.id}`, 
+    { method: "DELETE" })
+    .then((response) => {
+        setBotArmy((botFleet) => {
+          botFleet = [...botFleet];
+
+          if (botFleet.includes(bot)) {
+            botFleet.splice(botFleet.indexOf(bot), 1);
+          }
+          return botFleet;
+        });
+
+        setBots((botShown) => {
+          botShown = [...botShown];
+          botShown.splice(botShown.indexOf(bot), 1);
+          return botShown;
+        });
+      }
+    );
+  }
+
   return (
     <div className="ui column">
-      <div
-        className="ui card"
-        key={bot.id}
-        onClick={() => handleClick(bot)}
-      >
+      <div className="ui card" key={bot.id} onClick={(e) => handleBotClick(e)}>
         <div className="image">
           <img alt="oh no!" src={bot.avatar_url} />
         </div>
@@ -52,7 +90,7 @@ function BotCard({ bot, handleClick, deleteBot }) {
             <div className="ui center aligned segment basic">
               <button
                 className="ui mini red button"
-                onClick={handleDischarge}
+                onClick={(e) => releaseBot(e)}
               >
                 x
               </button>
